@@ -1,21 +1,32 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+# All Vagrant configuration is done below. The "2" in Vagrant.configure
+# configures the configuration version (we support older styles for
+# backwards compatibility). Please don't change it unless you know what
+# you're doing.
 Vagrant.configure("2") do |config|
-  # Set the box to Ubuntu 18.04 (Bionic)
-  config.vm.box = "ubuntu/bionic64"
+ # The most common configuration options are documented and commented below.
+ # For a complete reference, please see the online documentation at
+ # https://docs.vagrantup.com.
 
-  # Update and upgrade the packages on VM startup
-  config.vm.provision "shell", inline: <<-SHELL
-    sudo apt-get update && sudo apt-get upgrade -y
+ # Every Vagrant development environment requires a box. You can search for
+ # boxes at https://vagrantcloud.com/search.
+ config.vm.box = "ubuntu/bionic64"
+ config.vm.box_version = "~> 20191107.0.0"
 
-    # Install Python 3 if it's not already installed
-    sudo apt-get install -y python3 python3-pip
+ config.vm.network "forwarded_port", guest: 8000, host: 8000
 
-    # Create an alias file to set Python 3 as the default
-    echo 'alias python=python3' | sudo tee -a /home/vagrant/.bashrc
+ config.vm.provision "shell", inline: <<-SHELL
+   systemctl disable apt-daily.service
+   systemctl disable apt-daily.timer
 
-    # Reload .bashrc to apply alias
-    source /home/vagrant/.bashrc
-  SHELL
-
-  # Forward port 8000 from guest to host
-  config.vm.network "forwarded_port", guest: 8000, host: 8000
+   sudo apt-get update
+   sudo apt-get install -y python3-venv zip
+   touch /home/vagrant/.bash_aliases
+   if ! grep -q PYTHON_ALIAS_ADDED /home/vagrant/.bash_aliases; then
+     echo "# PYTHON_ALIAS_ADDED" >> /home/vagrant/.bash_aliases
+     echo "alias python='python3'" >> /home/vagrant/.bash_aliases
+   fi
+ SHELL
 end
