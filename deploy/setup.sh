@@ -10,22 +10,36 @@ PROJECT_BASE_PATH='/usr/local/apps/profiles-rest-api'
 # Set Ubuntu Language
 locale-gen en_GB.UTF-8
 
-# Install Python, SQLite and pip
+# Install Python, SQLite, pip, build dependencies, and other necessary tools
 echo "Installing dependencies..."
 apt-get update
-apt-get install -y python3-dev python3-venv sqlite3 python3-pip supervisor nginx git
+apt-get install -y python3.10 python3.10-venv python3.10-dev sqlite3 python3-pip supervisor nginx git build-essential libpcre3-dev libssl-dev
 
+# Clone project repo and create virtual environment
 mkdir -p $PROJECT_BASE_PATH
 git clone $PROJECT_GIT_URL $PROJECT_BASE_PATH
 
-python3 -m venv $PROJECT_BASE_PATH/env
+# Create Python 3.10 virtual environment
+python3.10 -m venv $PROJECT_BASE_PATH/env
 
-$PROJECT_BASE_PATH/env/bin/pip install -r $PROJECT_BASE_PATH/requirements.txt uwsgi==2.0.21
+# Upgrade pip, setuptools, and wheel
+$PROJECT_BASE_PATH/env/bin/pip install --upgrade pip setuptools wheel
 
-# Run migrations
+# Install project dependencies
+$PROJECT_BASE_PATH/env/bin/pip install -r $PROJECT_BASE_PATH/requirements.txt
+
+# Install uwsgi (or gunicorn as a fallback)
+# Option 1: Install a newer version of uwsgi
+echo "Installing uwsgi..."
+$PROJECT_BASE_PATH/env/bin/pip install uwsgi --upgrade
+
+# Option 2: Install gunicorn if uwsgi installation fails (uncomment if you want to switch to gunicorn)
+# $PROJECT_BASE_PATH/env/bin/pip install gunicorn
+
+# Run Django migrations
 $PROJECT_BASE_PATH/env/bin/python $PROJECT_BASE_PATH/manage.py migrate
 
-# Setup Supervisor to run our uwsgi process.
+# Setup Supervisor to run our uwsgi or gunicorn process.
 cp $PROJECT_BASE_PATH/deploy/supervisor_profiles_api.conf /etc/supervisor/conf.d/profiles_api.conf
 supervisorctl reread
 supervisorctl update
