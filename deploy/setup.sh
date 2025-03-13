@@ -5,9 +5,14 @@ set -e
 PROJECT_GIT_URL='https://github.com/sepehr-sanaei/profile-rest-api.git'
 PROJECT_BASE_PATH='/usr/local/apps/profiles-rest-api'
 
-# Install Python 3.11 and dependencies
+# Install Python 3.11 from deadsnakes PPA
 echo "Installing dependencies..."
 apt-get update
+apt-get install -y software-properties-common
+add-apt-repository -y ppa:deadsnakes/ppa
+apt-get update
+
+# Install Python 3.11 and dependencies
 apt-get install -y python3.11 python3.11-dev python3.11-venv sqlite3 supervisor nginx git
 
 # Create virtual environment with Python 3.11
@@ -15,7 +20,7 @@ mkdir -p $PROJECT_BASE_PATH
 git clone $PROJECT_GIT_URL $PROJECT_BASE_PATH
 python3.11 -m venv $PROJECT_BASE_PATH/env
 
-# Install requirements (remove explicit uwsgi version if in requirements.txt)
+# Install requirements
 $PROJECT_BASE_PATH/env/bin/pip install -r $PROJECT_BASE_PATH/requirements.txt
 
 # Run migrations
